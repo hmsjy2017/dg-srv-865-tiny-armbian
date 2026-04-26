@@ -1,4 +1,4 @@
-name: Build Armbian (Debian 13 minimal)
+name: Build Armbian （Debian 13 minimal)
 on:
   workflow_dispatch:
 
@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "deb http://deb.debian.org/debian trixie main" | sudo tee /etc/apt/sources.list.d/trixie.list
+          echo "deb [trusted=yes] http://deb.debian.org/debian trixie main" | sudo tee /etc/apt/sources.list.d/trixie.list
           sudo apt update
           sudo apt install -y -t trixie mkbootimg
           sudo rm /etc/apt/sources.list.d/trixie.list
