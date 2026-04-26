@@ -5,27 +5,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/armbian/docker-armbian-build:armbian-debian-trixie-latest
+      options: --privileged
     steps:
-      - name: Inject Official AOSP mkbootimg
-        run: |
-          sudo apt-get update && sudo apt-get install -y mkbootimg || true
-          git clone https://android.googlesource.com/platform/system/tools/mkbootimg /tmp/mkbootimg
-          sudo cp -f /tmp/mkbootimg/mkbootimg.py /usr/bin/mkbootimg
-          sudo cp -rf /tmp/mkbootimg/gki /usr/bin/
-          sudo chmod +x /usr/bin/mkbootimg
-
       - uses: actions/checkout@v4
 
-      - uses: armbian/build@main
-        with:
-          armbian_token: ${{ secrets.GITHUB_TOKEN }}
-          armbian_board: "dg-svr-865-tiny"
-          armbian_release: "trixie"
-          armbian_target: "build"
-          armbian_ui: "minimal"
-          armbian_runner_clean: "yes"
+      - name: Clone Armbian Build Framework
+        run: git clone --depth 1 https://github.com/armbian/build armbian-build
 
-      - uses: actions/upload-artifact@v4
+      - name: Compile Image
+        run: |
+          cd armbian-build
+          ./compile.sh \
+            BOARD="dg-svr-865-tiny" \
+            RELEASE="trixie" \
+            BUILD_MINIMAL="yes" \
+            BUILD_DESKTOP="no" \
+            PREFER_DOCKER="no" \
+            EXPERT="yes" \
+            IGNORE_UPDATES="yes"
+
+      - name: Fix Permissions
+        if: always()
+        run: chown -R 1001:1001 .
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: armbian-image
-          path: output/images/*.img*
+          name: armbian-trixie-image
+          path: armbian-build/output/images/*.img*
