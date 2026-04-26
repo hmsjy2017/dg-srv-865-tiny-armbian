@@ -34,6 +34,7 @@ jobs:
             KERNEL_CONFIGURE="no"
 
       - run: |
+          sudo chown -R $USER:$USER armbian-build/output/images
           cd armbian-build/output/images
           rm -f *.sha
           xz -z -T0 *.img
