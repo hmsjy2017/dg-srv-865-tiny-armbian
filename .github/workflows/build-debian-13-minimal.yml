@@ -2,6 +2,9 @@ name: Build Armbian (Debian 13 minimal)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +33,11 @@ jobs:
             IGNORE_UPDATES="yes" \
             KERNEL_CONFIGURE="no"
 
-      - uses: actions/upload-artifact@v4
+      - id: datetime
+        run: echo "date=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@v2
         with:
-          name: armbian-image
-          path: armbian-build/output/images/*.img*
+          tag_name: v${{ steps.datetime.outputs.date }}
+          name: Armbian Trixie ${{ steps.datetime.outputs.date }}
+          files: armbian-build/output/images/*
