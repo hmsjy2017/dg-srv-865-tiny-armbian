@@ -26,7 +26,8 @@ jobs:
             BUILD_DESKTOP="no" \
             PREFER_DOCKER="no" \
             EXPERT="yes" \
-            IGNORE_UPDATES="yes"
+            IGNORE_UPDATES="yes" \
+            KERNEL_CONFIGURE="no"
 
       - uses: actions/upload-artifact@v4
         with:
