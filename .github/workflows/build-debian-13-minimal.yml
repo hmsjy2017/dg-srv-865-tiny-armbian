@@ -1,4 +1,4 @@
-name: Build Armbian （Debian 13 minimal)
+name: Build Armbian (Debian 13 minimal)
 on:
   workflow_dispatch:
 
@@ -6,12 +6,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "deb [trusted=yes] http://deb.debian.org/debian trixie main" | sudo tee /etc/apt/sources.list.d/trixie.list
-          sudo apt update
-          sudo apt install -y -t trixie mkbootimg
-          sudo rm /etc/apt/sources.list.d/trixie.list
-          sudo apt update
+      - name: Inject Official AOSP mkbootimg
+        run: |
+          sudo apt-get update && sudo apt-get install -y mkbootimg || true
+          git clone https://android.googlesource.com/platform/system/tools/mkbootimg /tmp/mkbootimg
+          sudo cp -f /tmp/mkbootimg/mkbootimg.py /usr/bin/mkbootimg
+          sudo cp -rf /tmp/mkbootimg/gki /usr/bin/
+          sudo chmod +x /usr/bin/mkbootimg
 
       - uses: actions/checkout@v4
 
