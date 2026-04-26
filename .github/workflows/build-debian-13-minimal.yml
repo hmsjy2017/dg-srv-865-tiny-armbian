@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - run: |
           sudo apt-get update && sudo apt-get install -y mkbootimg || true
@@ -33,10 +33,15 @@ jobs:
             IGNORE_UPDATES="yes" \
             KERNEL_CONFIGURE="no"
 
+      - run: |
+          cd armbian-build/output/images
+          rm -f *.sha
+          xz -z -T0 *.img
+
       - id: datetime
         run: echo "date=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
 
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.datetime.outputs.date }}
           name: Armbian Trixie ${{ steps.datetime.outputs.date }}
