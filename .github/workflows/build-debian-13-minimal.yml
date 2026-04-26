@@ -5,17 +5,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/armbian/docker-armbian-build:armbian-debian-trixie-latest
-      options: --privileged
     steps:
       - uses: actions/checkout@v4
 
-      - name: Clone Armbian Build Framework
-        run: git clone --depth 1 https://github.com/armbian/build armbian-build
+      - run: |
+          sudo apt-get update && sudo apt-get install -y mkbootimg || true
+          git clone https://android.googlesource.com/platform/system/tools/mkbootimg /tmp/mkbootimg
+          sudo cp -f /tmp/mkbootimg/mkbootimg.py /usr/bin/mkbootimg
+          sudo cp -rf /tmp/mkbootimg/gki /usr/bin/
+          sudo chmod +x /usr/bin/mkbootimg
 
-      - name: Compile Image
-        run: |
+      - run: git clone --depth 1 https://github.com/armbian/build armbian-build
+
+      - run: |
           cd armbian-build
           ./compile.sh \
             BOARD="dg-svr-865-tiny" \
@@ -26,12 +28,7 @@ jobs:
             EXPERT="yes" \
             IGNORE_UPDATES="yes"
 
-      - name: Fix Permissions
-        if: always()
-        run: chown -R 1001:1001 .
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: armbian-trixie-image
+          name: armbian-image
           path: armbian-build/output/images/*.img*
