@@ -1,16 +1,40 @@
-name: Build Armbian Image (Debian 13 minimal)
+name: Build Armbian Image (Debian Trixie Container)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # ubuntu-24.04-arm, ubuntu-24.04-riscv
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+      options: --privileged
     steps:
-      - uses: armbian/build@main
+      - name: Prepare Container
+        run: |
+          apt-get update
+          apt-get install -y sudo git curl wget ca-certificates qemu-user-static jq
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Armbian build
+        uses: armbian/build@main
         with:
           armbian_token: ${{ secrets.GITHUB_TOKEN }}
-          armbian_board: "dg-svr-865-tiny" # orangepi5 bananapif3
-          armbian_release: "trixie" # trixie
+          armbian_board: "dg-svr-865-tiny"
+          armbian_release: "trixie"
           armbian_target: "build"
-          armbian_ui: "minimal" # server xfce
-          armbian_runner_clean: "yes" # recommended for Github runners
+          armbian_ui: "minimal"
+          armbian_runner_clean: "yes"
+
+      - name: Fix Permissions
+        if: always()
+        run: |
+          chown -R 1001:1001 .
+
+      - name: Upload Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Armbian_Trixie_Image
+          path: output/images/*.img*
