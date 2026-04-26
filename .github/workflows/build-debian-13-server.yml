@@ -1,0 +1,43 @@
+name: Build Armbian (Debian 13 minimal)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - run: |
+          sudo apt-get update && sudo apt-get install -y mkbootimg || true
+          git clone https://android.googlesource.com/platform/system/tools/mkbootimg /tmp/mkbootimg
+          sudo cp -f /tmp/mkbootimg/mkbootimg.py /usr/bin/mkbootimg
+          sudo cp -rf /tmp/mkbootimg/gki /usr/bin/
+          sudo chmod +x /usr/bin/mkbootimg
+
+      - run: git clone --depth 1 https://github.com/armbian/build armbian-build
+
+      - run: |
+          cd armbian-build
+          ./compile.sh \
+            BOARD="dg-svr-865-tiny" \
+            BRANCH="current" \
+            RELEASE="trixie" \
+            BUILD_MINIMAL="no" \
+            BUILD_DESKTOP="no" \
+            PREFER_DOCKER="no" \
+            EXPERT="yes" \
+            IGNORE_UPDATES="yes" \
+            KERNEL_CONFIGURE="no"
+
+      - id: datetime
+        run: echo "date=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.datetime.outputs.date }}
+          name: Armbian Trixie ${{ steps.datetime.outputs.date }}
+          files: armbian-build/output/images/*
